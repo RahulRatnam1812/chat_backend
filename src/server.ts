@@ -1,9 +1,11 @@
 import http from "node:http";
 import { PORT } from "./config/app.config";
 import { app } from "./app";
+import socketIo, { socketIoConfig } from "./config/socket.config";
 // import database from "./models/index";
 
 const server = http.createServer(app);
+socketIo.attach(server, socketIoConfig);
 
 const start = async (): Promise<void> => {
   try {
