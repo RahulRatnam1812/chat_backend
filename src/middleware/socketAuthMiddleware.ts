@@ -1,6 +1,8 @@
 import { Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET_KEY } from "../config/app.config";
+import { jwtData } from "../types/auth.type";
+
 
 export default async (socket: Socket, next: any) => {
   try {
@@ -13,9 +15,10 @@ export default async (socket: Socket, next: any) => {
     if (!verifiedUser) {
       return next(new Error("Authentication error: Invalid token"));
     }
-    const jwtData = jwt.decode(token);
-    if(jwtData){
-      // socket.join(jwtData.userId)
+    const data:jwtData = jwt.decode(token) as jwtData;
+    if(data){
+      socket.join(data.uniqueId)
+      console.log(`UserId: ${data.userId} authenticated and joined room: ${data.uniqueId}`);
     }
     next();
   }catch (error) {
