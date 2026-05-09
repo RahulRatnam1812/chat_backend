@@ -17,9 +17,10 @@ const start = async (): Promise<void> => {
       console.log("A client connected:", socket.id);
 
       socket.on("sentMessage", (data: any) => {
-        redisClient.hset(socket.id, { message: JSON.stringify(data), timestamp: new Date().toISOString() });
+        redisClient.hset(`${socket.id}:${data.receiver_id}`, { ...data, action: "sent" });
         console.log("Message received:", data);
-        socketIo.emit("newMessage", data);
+        socketIo.to(data.receiver_id).emit("newMessage", data);
+        redisClient.hset(`${data.receiver_id}:${socket.id}`, { ...data, action: "received" });
       });
       socket.on("disconnect", () => {
         console.log("A client disconnected:", socket.id);
