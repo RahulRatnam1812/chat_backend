@@ -8,6 +8,7 @@ import { Socket } from "socket.io";
 import redisClient from "./config/redis.config";
 import { jwtData } from "./types/auth.type";
 import jwt from "jsonwebtoken";
+import { SocketServices } from "./services/socket.services";
 
 const server = http.createServer(app);
 socketIo.attach(server, socketIoConfig);
@@ -18,8 +19,10 @@ const start = async (): Promise<void> => {
     socketIo.on("connection", (socket: Socket) => {
       console.log("A client connected:", socket.id);
       const auth = socket.handshake.auth.Authorization || socket.handshake.headers["authorization"];
-    const token = auth && auth.split(" ")[1]; 
-    const data:jwtData = jwt.decode(token) as jwtData;
+      const token = auth && auth.split(" ")[1]; 
+      const data:jwtData = jwt.decode(token) as jwtData;
+      const SocketService = new SocketServices(socket);
+      SocketService.StoreOnlineUser(data);
       redisClient.publish("userOnline",JSON.stringify({uniqueId:data.uniqueId}))
       const timestamp = new Date();
       socket.on("sentMessage", (data: any) => {
