@@ -3,7 +3,7 @@ import { jwtData } from "../types/auth.type";
 import redisClient from "../config/redis.config";
 
 export class SocketServices {
-    private socket:Socket|null = null;
+    private socket: Socket | null = null;
     constructor(socket: Socket) {
         this.socket = socket;
     }
@@ -12,6 +12,12 @@ export class SocketServices {
             redisClient.hset("onlineUsers", onlineUser.uniqueId, JSON.stringify(onlineUser));
             // const userId = this.socket.handshake.query.userId;
             // onlineUsers[userId] = this.socket.id;
+        }
+    }
+
+    public removeOnlineUser(onlineUser: jwtData) {
+        if (this.socket) {
+             redisClient.hdel("onlineUsers", onlineUser.uniqueId);
         }
     }
 }

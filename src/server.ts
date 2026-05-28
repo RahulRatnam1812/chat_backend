@@ -19,7 +19,7 @@ const start = async (): Promise<void> => {
     socketIo.on("connection", (socket: Socket) => {
       console.log("A client connected:", socket.id);
       const auth = socket.handshake.auth.Authorization || socket.handshake.headers["authorization"];
-      const token = auth && auth.split(" ")[1]; 
+      const token = auth && auth.split(" ")[1];
       const data:jwtData = jwt.decode(token) as jwtData;
       const SocketService = new SocketServices(socket);
       SocketService.StoreOnlineUser(data);
@@ -31,7 +31,8 @@ const start = async (): Promise<void> => {
         socketIo.to(data.receiver_id).emit("newMessage", data);
         redisClient.hset(`${data.receiver_id}:${data.sender_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "received" }));
       });
-      socket.on("disconnect", () => {
+      socket.on("disconnect",() => {
+        SocketService.removeOnlineUser(data);
         console.log("A client disconnected:", socket.id);
       });
     });
