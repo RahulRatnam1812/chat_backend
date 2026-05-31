@@ -16,4 +16,17 @@ export class ChatMessagesController {
         }
     }
 
+    public static async getOnlineUsers(req:Request,res:Response){
+        console.log("getOnlineUsers called");
+        try{
+            const data = await redisClient.hkeys("onlineUsers");
+            res.status(200).json({success:true,status:true,message:"Oneline users fetched successfully",data:data})
+
+        }catch(error){
+            console.error("error while getting online users ",error);
+            res.status(500).json({success:false,message:"Internal server error"})
+
+        }
+    }
+
 }
