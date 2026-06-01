@@ -16,17 +16,26 @@ export class ChatMessagesController {
         }
     }
 
-    public static async getOnlineUsers(req:Request,res:Response){
-        console.log("getOnlineUsers called");
-        try{
-            const data = await redisClient.hkeys("onlineUsers");
-            res.status(200).json({success:true,status:true,message:"Oneline users fetched successfully",data:data})
+    public static async getOnlineUsers(req: Request, res: Response) {
+        // console.log("getOnlineUsers called");
+        try {
+            // const data = await redisClient.hkeys("onlineUsers");
+            const data = await redisClient.hgetall("onlineUsers");
+            // res.status(200).json({success:true,status:"success",message:"Oneline users fetched successfully",data:data})
+            const users = Object.values(data).map((value)=>{
+                const user = JSON.parse(value);
+                return {
+                    uniqueId:user.uniqueId,
+                    timestamp:user.iat,
+                    status:true
+                }
+            })
+            res.status(200).json({success: true,data: users});
 
-        }catch(error){
-            console.error("error while getting online users ",error);
-            res.status(500).json({success:false,message:"Internal server error"})
+        } catch (error) {
+            console.error("error while getting online users ", error);
+            res.status(500).json({ success: false, message: "Internal server error" })
 
         }
     }
-
 }

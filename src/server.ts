@@ -16,14 +16,14 @@ socketIo.use(socketAuthMiddleware);
 
 const start = async (): Promise<void> => {
   try {
-    socketIo.on("connection", (socket: Socket) => {
+    socketIo.on("connection", async (socket: Socket) => {
       console.log("A client connected:", socket.id);
       const auth = socket.handshake.auth.Authorization || socket.handshake.headers["authorization"];
       const token = auth && auth.split(" ")[1];
-      const data:jwtData = jwt.decode(token) as jwtData;
+      const data: jwtData = jwt.decode(token) as jwtData;
       const SocketService = new SocketServices(socket);
       SocketService.StoreOnlineUser(data);
-      redisClient.publish("userOnline",JSON.stringify({uniqueId:data.uniqueId}))
+      redisClient.publish("userOnline", JSON.stringify({ uniqueId: data.uniqueId }))
       const timestamp = new Date();
       socket.on("sentMessage", (data: any) => {
         redisClient.hset(`${data.sender_id}:${data.receiver_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "sent" }));
@@ -31,9 +31,14 @@ const start = async (): Promise<void> => {
         socketIo.to(data.receiver_id).emit("newMessage", data);
         redisClient.hset(`${data.receiver_id}:${data.sender_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "received" }));
       });
-      socket.on("disconnect",() => {
+      const onlineUsers = await redisClient.hgetall("onlineUsers");
+      socketIo.emit("onlineUsers", Object.values(onlineUsers).map((user) => JSON.parse(user)));
+
+      socket.on("disconnect", async () => {
         SocketService.removeOnlineUser(data);
-        console.log("A client disconnected:", socket.id);
+        const onlineUsers = await redisClient.hgetall("onlineUsers");
+        console.log("After disconnect:", onlineUsers);
+        socketIo.emit("onlineUsers",Object.values(onlineUsers).map((user) => JSON.parse(user)));
       });
     });
     // await database.sync({ force: false });
