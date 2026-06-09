@@ -9,13 +9,18 @@ import { jwtData } from "./types/auth.type";
 import jwt from "jsonwebtoken";
 import { SocketServices } from "./services/socket.services";
 import Message from "./models/message.model";
-
+// import database from "./config/database";
+import connection from "./models";
+import { MessageService } from "./services/message.service";
 const server = http.createServer(app);
 socketIo.attach(server, socketIoConfig);
 socketIo.use(socketAuthMiddleware);
 
 const start = async (): Promise<void> => {
   try {
+
+    await connection.authenticate();
+    // console.log("Connected DB:", connection.getDatabaseName());
     socketIo.on("connection", async (socket: Socket) => {
       console.log("A client connected:", socket.id);
       const auth = socket.handshake.auth.Authorization || socket.handshake.headers["authorization"];
@@ -32,20 +37,12 @@ const start = async (): Promise<void> => {
       //   redisClient.hset(`${data.receiver_id}:${data.sender_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "received" }));
       // });
 
-      socket.on("sentMessage", async (data: any) => {
-        console.log("Data Received:", data);
-
+      socket.on("sentMessage", async (data) => {
         try {
-          const savedMessage = await Message.create({
-            senderId: data.sender_id,
-            receiverId: data.receiver_id,
-            message: data.message
-          });
-
+          const savedMessage = await MessageService.createMessage(data);
           console.log("Saved Message:", savedMessage.toJSON());
-
-        } catch (error) {
-          console.error("Error while saving:", error);
+        } catch (err) {
+          console.error("Error saving message:", err);
         }
       });
       const onlineUsers = await redisClient.hgetall("onlineUsers");
