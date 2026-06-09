@@ -2,13 +2,13 @@ import http from "node:http";
 import { PORT } from "./config/app.config";
 import { app } from "./app";
 import socketIo, { socketIoConfig } from "./config/socket.config";
-// import database from "./models/index";
 import socketAuthMiddleware from "./middleware/socketAuthMiddleware"
 import { Socket } from "socket.io";
 import redisClient from "./config/redis.config";
 import { jwtData } from "./types/auth.type";
 import jwt from "jsonwebtoken";
 import { SocketServices } from "./services/socket.services";
+import Message from "./models/message.model";
 
 const server = http.createServer(app);
 socketIo.attach(server, socketIoConfig);
@@ -25,11 +25,28 @@ const start = async (): Promise<void> => {
       SocketService.StoreOnlineUser(data);
       redisClient.publish("userOnline", JSON.stringify({ uniqueId: data.uniqueId }))
       const timestamp = new Date();
-      socket.on("sentMessage", (data: any) => {
-        redisClient.hset(`${data.sender_id}:${data.receiver_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "sent" }));
-        console.log("Message received:", data);
-        socketIo.to(data.receiver_id).emit("newMessage", data);
-        redisClient.hset(`${data.receiver_id}:${data.sender_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "received" }));
+      // socket.on("sentMessage", (data: any) => {
+      //   redisClient.hset(`${data.sender_id}:${data.receiver_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "sent" }));
+      //   console.log("Message received:", data);
+      //   socketIo.to(data.receiver_id).emit("newMessage", data);
+      //   redisClient.hset(`${data.receiver_id}:${data.sender_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "received" }));
+      // });
+
+      socket.on("sentMessage", async (data: any) => {
+        console.log("Data Received:", data);
+
+        try {
+          const savedMessage = await Message.create({
+            senderId: data.sender_id,
+            receiverId: data.receiver_id,
+            message: data.message
+          });
+
+          console.log("Saved Message:", savedMessage.toJSON());
+
+        } catch (error) {
+          console.error("Error while saving:", error);
+        }
       });
       const onlineUsers = await redisClient.hgetall("onlineUsers");
       socketIo.emit("onlineUsers", Object.values(onlineUsers).map((user) => JSON.parse(user)));
@@ -38,7 +55,7 @@ const start = async (): Promise<void> => {
         SocketService.removeOnlineUser(data);
         const onlineUsers = await redisClient.hgetall("onlineUsers");
         console.log("After disconnect:", onlineUsers);
-        socketIo.emit("onlineUsers",Object.values(onlineUsers).map((user) => JSON.parse(user)));
+        socketIo.emit("onlineUsers", Object.values(onlineUsers).map((user) => JSON.parse(user)));
       });
     });
     // await database.sync({ force: false });
