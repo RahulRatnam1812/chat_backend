@@ -9,3 +9,5 @@ const redisClient = new Redis({
 
 
 export default redisClient;
+
+export const ALL_USERS_CACHE_KEY = 'ALL_USERS';
