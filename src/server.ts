@@ -31,6 +31,12 @@ const start = async (): Promise<void> => {
         socketIo.to(data.receiver_id).emit("newMessage", data);
         redisClient.hset(`${data.receiver_id}:${data.sender_id}`, `${timestamp}`, JSON.stringify({ ...data, action: "received" }));
       });
+
+      socket.on("typing",(data:any) => {
+        console.log("Typing event received:", data);
+        socketIo.to(data.receiver_id).emit("typing", data);
+      });
+
       socket.on("disconnect",() => {
         SocketService.removeOnlineUser(data);
         console.log("A client disconnected:", socket.id);
