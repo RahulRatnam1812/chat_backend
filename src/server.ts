@@ -40,6 +40,10 @@ const start = async (): Promise<void> => {
       socket.on("sentMessage", async (data) => {
         try {
           const savedMessage = await MessageService.createMessage(data);
+          await redisClient.hset( `${data.sender_id}:${data.receiver_id}`, `${timestamp}`,JSON.stringify({ ...data, action: "sent" }));
+          socketIo.to(data.receiver_id).emit("newMessage", data);
+          await redisClient.hset(`${data.receiver_id}:${data.sender_id}`,`${timestamp}`,JSON.stringify({ ...data, action: "received" }));
+
           console.log("Saved Message:", savedMessage.toJSON());
         } catch (err) {
           console.error("Error saving message:", err);
