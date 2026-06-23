@@ -8,7 +8,6 @@ import redisClient from "./config/redis.config";
 import { jwtData } from "./types/auth.type";
 import jwt from "jsonwebtoken";
 import { SocketServices } from "./services/socket.services";
-import Message from "./models/message.model";
 // import database from "./config/database";
 import connection from "./models";
 import { MessageService } from "./services/message.service";
@@ -39,6 +38,7 @@ const start = async (): Promise<void> => {
 
       socket.on("sentMessage", async (data) => {
         try {
+          console.log("sentMessage",data);
           const savedMessage = await MessageService.createMessage(data);
           await redisClient.hset( `${data.sender_id}:${data.receiver_id}`, `${timestamp}`,JSON.stringify({ ...data, action: "sent" }));
           socketIo.to(data.receiver_id).emit("newMessage", data);

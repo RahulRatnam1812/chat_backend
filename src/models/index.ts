@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize-typescript";
 import dbConfig from "../config/database";
-import Message from "./message.model";
+import Message from "./message";
 // import { types } from 'pg';
 // types.setTypeParser(20, (val: string) => parseInt(val, 10));
 
