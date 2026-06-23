@@ -62,6 +62,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true,
       },
+      is_edited: {
+        type: Sequelize.BOOLEAN,
+        
+      },
 
       status: {
         type: Sequelize.STRING,

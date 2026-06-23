@@ -9,6 +9,7 @@ export class MessageService {
       messageType: data.type,
       message: data.message,
       status: 1,
+      createdAt:0
     });
   }
 

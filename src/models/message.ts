@@ -50,7 +50,7 @@ class Message extends Model {
     field: "reply_to_id",
   })
   public replyToId!: string;
-  
+
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -87,7 +87,12 @@ class Message extends Model {
     allowNull: true,
   })
   public media_size!: string;
-
+  @Column({
+    type: DataType.BOOLEAN,
+    field: "is_edited",
+    defaultValue:false
+  })
+  public isEdited!: boolean
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -108,20 +113,20 @@ class Message extends Model {
   })
   public deliveredAt!: Date;
 
-  
+
   @Column({
     type: DataType.DATE,
     allowNull: false,
     field: "created_at",
   })
   public createdAt!: Date;
-  
+
   @Column({
     type: DataType.DATE,
     field: "updated_at",
   })
   public updatedAt!: Date;
-  
+
   @Column({
     type: DataType.DATE,
     allowNull: true,
