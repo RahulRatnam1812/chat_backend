@@ -9,8 +9,20 @@ export class MessageService {
       messageType: data.type,
       message: data.message,
       status: 1,
-      createdAt:0
+      createdAt: 0
     });
+  }
+
+  static async updateMessage(uniqueId: string, message: string) {
+    const existingMessage = await Message.findOne({ where: { uniqueId }, });
+
+    if (!existingMessage) {
+      throw new Error("Message not found");
+    }
+    existingMessage.message = message;
+    existingMessage.isEdited = true;
+    await existingMessage.save();
+    return existingMessage;
   }
 
 }
